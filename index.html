@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101416" />
+    <title>Ночник — трекер сна</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101416'/%3E%3Cpath d='M20.5 7.2a8.6 8.6 0 1 0 4.3 14.6 7.2 7.2 0 1 1-4.3-14.6z' fill='%23e4b56a'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520;9..144,640&family=Outfit:wght@380;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem('sleep-tracker.theme') === 'light' ? 'light' : 'dark'
+      document.documentElement.lang = localStorage.getItem('sleep-tracker.lang') === 'uz' ? 'uz' : 'ru'
+    </script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow" data-i18n="brandKicker">Трекер сна</p>
+            <h1 data-i18n="brandTitle">Ночник</h1>
+          </div>
+        </div>
+        <nav class="nav" data-i18n-aria="navLabel" aria-label="Разделы">
+          <button type="button" data-view="overview" class="is-active" data-i18n="viewOverview">Обзор</button>
+          <button type="button" data-view="duration" data-i18n="viewDuration">Длительность</button>
+          <button type="button" data-view="rhythm" data-i18n="viewRhythm">Режим</button>
+          <button type="button" data-view="journal" data-i18n="viewJournal">Журнал</button>
+        </nav>
+        <div class="actions">
+          <div class="lang-switch" role="group" data-i18n-aria="langLabel" aria-label="Язык">
+            <button type="button" data-lang-choice="ru" class="is-active" aria-pressed="true">RU</button>
+            <button type="button" data-lang-choice="uz" aria-pressed="false">UZ</button>
+          </div>
+          <div class="theme-switch" role="group" data-i18n-aria="themeLabel" aria-label="Тема оформления">
+            <button type="button" data-theme-choice="dark" class="is-active" aria-pressed="true" data-i18n="themeDark">Тёмная</button>
+            <button type="button" data-theme-choice="light" aria-pressed="false" data-i18n="themeLight">Светлая</button>
+          </div>
+          <button type="button" class="button solid" id="add-night" data-i18n="addNight">Добавить ночь</button>
+        </div>
+      </header>
+
+      <main class="stage">
+        <section class="view is-active" data-panel="overview">
+          <div class="stats">
+            <article class="stat">
+              <p data-i18n="lastNight">Последняя ночь</p>
+              <strong id="stat-last">—</strong>
+              <span id="stat-last-meta">Записей пока нет</span>
+            </article>
+            <article class="stat">
+              <p id="stat-avg-label">Среднее за 7 ночей</p>
+              <strong id="stat-avg">—</strong>
+              <span data-i18n="target">Ориентир — 8 часов</span>
+            </article>
+            <article class="stat">
+              <p data-i18n="quality">Качество</p>
+              <strong id="stat-quality">—</strong>
+              <span id="stat-quality-meta">Нет оценок</span>
+            </article>
+            <article class="stat">
+              <p id="stat-debt-label">Недосып</p>
+              <strong id="stat-debt">—</strong>
+              <span id="stat-debt-meta">За последние ночи</span>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" data-panel="duration">
+          <article class="panel">
+            <header class="panel-head">
+              <div>
+                <h2 data-i18n="durationTitle">Длительность</h2>
+                <p data-i18n="durationHint">Сколько часов длилась каждая ночь</p>
+              </div>
+              <div class="range-switch" role="group" data-i18n-aria="durationRange" aria-label="Период графика длительности">
+                <button type="button" data-range="7" data-i18n="days7">7 дн</button>
+                <button type="button" data-range="14" class="is-active" data-i18n="days14">14 дн</button>
+                <button type="button" data-range="30" data-i18n="days30">30 дн</button>
+              </div>
+            </header>
+            <div class="chart-frame" id="duration-frame">
+              <p class="empty-chart" id="duration-empty" data-i18n="emptyChart" hidden>Добавьте ночи — график соберётся из журнала.</p>
+              <svg id="duration-chart" class="chart-svg" viewBox="0 0 640 280" role="img" data-i18n-aria="durationChartAria" aria-label="График длительности сна"></svg>
+              <div class="tip" id="duration-tip" hidden></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="view" data-panel="rhythm">
+          <article class="panel">
+            <header class="panel-head">
+              <div>
+                <h2 data-i18n="rhythmTitle">Отбой и качество</h2>
+                <p data-i18n="rhythmHint">Насколько ровный режим и как оценивается ночь</p>
+              </div>
+              <div class="range-switch" role="group" data-i18n-aria="rhythmRange" aria-label="Период графика режима">
+                <button type="button" data-range="7" data-i18n="days7">7 дн</button>
+                <button type="button" data-range="14" class="is-active" data-i18n="days14">14 дн</button>
+                <button type="button" data-range="30" data-i18n="days30">30 дн</button>
+              </div>
+            </header>
+            <div class="chart-frame" id="rhythm-frame">
+              <p class="empty-chart" id="rhythm-empty" data-i18n="emptyChart" hidden>Добавьте ночи — график соберётся из журнала.</p>
+              <svg id="rhythm-chart" class="chart-svg" viewBox="0 0 640 280" role="img" data-i18n-aria="rhythmChartAria" aria-label="График отбоя и качества сна"></svg>
+              <div class="legend">
+                <span><i class="swatch teal"></i> <span data-i18n="legendBed">Отбой</span></span>
+                <span><i class="swatch rose"></i> <span data-i18n="legendQuality">Качество, 1–5</span></span>
+              </div>
+              <div class="tip" id="rhythm-tip" hidden></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="view panel journal" data-panel="journal" id="journal">
+          <div id="journal-empty" class="empty-journal" hidden>
+            <h2 data-i18n="journalEmptyTitle">Журнал пуст</h2>
+            <p data-i18n="journalEmptyText">Добавьте первую ночь: дату, отбой, подъём и оценку.</p>
+          </div>
+          <div id="journal-filled">
+            <header class="panel-head">
+              <div>
+                <h2 data-i18n="journalTitle">Журнал</h2>
+                <p id="journal-count"></p>
+              </div>
+            </header>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th data-i18n="colNight">Ночь</th>
+                    <th data-i18n="colBed">Отбой</th>
+                    <th data-i18n="colWake">Подъём</th>
+                    <th data-i18n="colDuration">Длительность</th>
+                    <th data-i18n="colQuality">Качество</th>
+                    <th data-i18n="colNote">Заметка</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="journal-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="entry-dialog" class="dialog" aria-labelledby="form-title">
+      <form id="entry-form" class="sheet">
+        <header class="sheet-head">
+          <div>
+            <p class="eyebrow" id="form-kicker" data-i18n="formNewKicker">Новая ночь</p>
+            <h2 id="form-title" data-i18n="formNewTitle">Добавить сон</h2>
+          </div>
+          <button type="button" class="icon-button" id="close-form" data-i18n-aria="close" aria-label="Закрыть">×</button>
+        </header>
+        <div class="fields">
+          <label>
+            <span data-i18n="fieldDate">Дата ночи</span>
+            <input type="date" name="date" required />
+          </label>
+          <label>
+            <span data-i18n="fieldBed">Отбой</span>
+            <input type="time" name="bedtime" required />
+          </label>
+          <label>
+            <span data-i18n="fieldWake">Подъём</span>
+            <input type="time" name="wakeTime" required />
+          </label>
+        </div>
+        <fieldset>
+          <legend data-i18n="qualityLegend">Качество</legend>
+          <div class="quality-picker" id="quality-picker">
+            <label>
+              <input type="radio" name="quality" value="1" />
+              <span>1</span>
+              <small data-i18n="q1">Тяжело</small>
+            </label>
+            <label>
+              <input type="radio" name="quality" value="2" />
+              <span>2</span>
+              <small data-i18n="q2">Беспокойно</small>
+            </label>
+            <label>
+              <input type="radio" name="quality" value="3" />
+              <span>3</span>
+              <small data-i18n="q3">Нормально</small>
+            </label>
+            <label>
+              <input type="radio" name="quality" value="4" />
+              <span>4</span>
+              <small data-i18n="q4">Хорошо</small>
+            </label>
+            <label>
+              <input type="radio" name="quality" value="5" />
+              <span>5</span>
+              <small data-i18n="q5">Отлично</small>
+            </label>
+          </div>
+        </fieldset>
+        <label>
+          <span data-i18n="noteLabel">Заметка</span>
+          <textarea name="note" rows="3" maxlength="240" data-i18n-placeholder="notePlaceholder" placeholder="Что повлияло на сон"></textarea>
+        </label>
+        <p class="form-error" id="form-error" hidden></p>
+        <footer class="sheet-actions">
+          <button type="button" class="button ghost" id="cancel-form" data-i18n="cancel">Отмена</button>
+          <button type="submit" class="button solid" id="save-form" data-i18n="add">Добавить</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <script src="script.js"></script>
+  </body>
+</html>
